@@ -1,0 +1,9 @@
+{
+  "name": "HopRide by A2B",
+  "short_name": "HopRide",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07080b",
+  "theme_color": "#07080b",
+  "description": "Instant and scheduled rides across NW Ohio."
+}
