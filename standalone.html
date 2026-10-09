@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#070709" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>HopRide · A2B Rides</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@340;450;560;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #070709;
+    --bg2: #101014;
+    --card: rgba(18,18,24,.86);
+    --line: rgba(243,210,122,.18);
+    --gold: #e4c36a;
+    --gold2: #f7e2a4;
+    --ink: #f7f2e8;
+    --muted: #a39b8d;
+    --danger: #ff6b6b;
+    --ok: #7dffa8;
+    --shadow: 0 20px 60px rgba(0,0,0,.45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #050506; color: var(--ink); font-family: Outfit, system-ui, sans-serif; }
+  button, input, select { font-family: inherit; }
+  button { cursor: pointer; }
+  .stage {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(900px 500px at 70% -10%, rgba(228,195,106,.16), transparent 55%),
+      radial-gradient(700px 400px at 0% 100%, rgba(120,200,255,.08), transparent 50%),
+      #050506;
+  }
+  .phone {
+    width: min(440px, 100%);
+    min-height: 100dvh;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.04), var(--shadow);
+  }
+  @media (min-width: 760px) {
+    .phone { min-height: 92dvh; height: 920px; border-radius: 32px; margin: 20px 0; }
+  }
+  .screen { display: none; height: 100%; min-height: 100dvh; }
+  @media (min-width: 760px) { .screen { min-height: 920px; height: 920px; } }
+  .screen.on { display: flex; flex-direction: column; }
+  .holo {
+    background: linear-gradient(115deg, #e4c36a, #9be7ff 35%, #d7a4ff 62%, #f7e2a4);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .logo { font-family: Syne, sans-serif; font-weight: 800; letter-spacing: -0.04em; }
+  .muted { color: var(--muted); }
+  .gold { color: var(--gold); }
+
+  /* splash */
+  #splash {
+    background:
+      linear-gradient(180deg, rgba(7,7,9,.2), rgba(7,7,9,.88) 58%, #070709),
+      url('fleet.jpg') center 18% / cover no-repeat;
+  }
+  .splash-body { margin-top: auto; padding: 28px 22px 34px; }
+  .eyebrow { letter-spacing: .22em; text-transform: uppercase; font-size: 11px; color: var(--gold2); }
+  h1 { font-family: Syne, sans-serif; font-size: 46px; line-height: .92; margin: 10px 0 12px; }
+  .lede { color: #ddd4c4; font-size: 16px; line-height: 1.45; max-width: 34ch; }
+  .field { margin-top: 18px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; background: rgba(255,255,255,.06); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 14px; padding: 14px 14px; font-size: 16px; outline: none;
+  }
+  .row { display: flex; gap: 10px; }
+  .btn {
+    border: 0; border-radius: 16px; padding: 15px 16px; font-weight: 650; font-size: 16px;
+    background: linear-gradient(180deg, #f3d78a, #c9a24b); color: #1a1408;
+  }
+  .btn.block { width: 100%; margin-top: 12px; }
+  .btn.ghost {
+    background: transparent; color: var(--ink); border: 1px solid var(--line);
+  }
+  .btn.danger { background: #2a1214; color: #ffb4b4; }
+  .btn.slim { padding: 10px 12px; border-radius: 12px; font-size: 14px; }
+  .fine { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  /* home */
+  .map-wrap { position: relative; flex: 1; min-height: 280px; }
+  svg.map { width: 100%; height: 100%; display: block; background: #0c1016; }
+  .topbar, .sheet, .nav {
+    position: absolute; left: 12px; right: 12px; z-index: 3;
+  }
+  .topbar {
+    top: 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .pill {
+    background: rgba(10,10,14,.78); border: 1px solid var(--line); backdrop-filter: blur(10px);
+    border-radius: 999px; padding: 8px 12px; font-size: 13px;
+  }
+  .sheet {
+    bottom: 78px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 24px; padding: 16px; backdrop-filter: blur(16px); box-shadow: var(--shadow);
+  }
+  .where {
+    width: 100%; text-align: left; background: #1a1a22; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 16px; padding: 14px; font-size: 16px;
+  }
+  .chips { display: flex; gap: 8px; margin-top: 12px; overflow: auto; }
+  .chip {
+    border: 1px solid var(--line); background: #14141b; color: var(--ink);
+    border-radius: 999px; padding: 8px 12px; white-space: nowrap; font-size: 13px;
+  }
+  .chip.on { background: #2a2416; border-color: var(--gold); color: var(--gold2); }
+  .nav {
+    bottom: 12px; display: flex; background: rgba(12,12,16,.9); border: 1px solid var(--line);
+    border-radius: 18px; padding: 6px; backdrop-filter: blur(12px);
+  }
+  .nav button {
+    flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 12px; padding: 10px 4px; font-size: 12px;
+  }
+  .nav button.on { background: #221c12; color: var(--gold2); }
+
+  .subhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .search {
+    margin: 8px 12px 0; background: #14141b; border: 1px solid var(--line); color: var(--ink);
+    border-radius: 14px; padding: 12px 14px; font-size: 16px;
+  }
+  .list { padding: 8px 12px 100px; overflow: auto; }
+  .place, .ride-card, .class-card, .account-row {
+    width: 100%; text-align: left; background: #121218; border: 1px solid rgba(255,255,255,.06);
+    color: inherit; border-radius: 16px; padding: 12px; margin-top: 8px;
+  }
+  .place strong, .ride-card strong { display: block; }
+  .place small, .ride-card small { color: var(--muted); }
+  .pad { padding: 16px 16px 96px; overflow: auto; }
+  .class-card { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .class-card.on { border-color: var(--gold); background: #1b1812; }
+  .price { font-family: Syne, sans-serif; font-size: 22px; }
+  .split { display: flex; justify-content: space-between; gap: 8px; margin: 6px 0; font-size: 14px; }
+  .banner {
+    background: linear-gradient(90deg, rgba(228,195,106,.16), rgba(155,231,255,.08));
+    border: 1px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 10px;
+  }
+  .driver {
+    display: flex; gap: 12px; align-items: center; background: #14141b; border-radius: 16px; padding: 12px; border: 1px solid var(--line);
+  }
+  .avatar {
+    width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(140deg, #e4c36a, #7fd4ff 50%, #c084fc); color: #1a1408; font-weight: 800;
+  }
+  .stars { color: var(--gold); letter-spacing: 2px; font-size: 22px; }
+  .star { background: none; border: 0; color: #3a3428; font-size: 28px; padding: 0 2px; }
+  .star.on { color: var(--gold); }
+  .toast {
+    position: absolute; left: 16px; right: 16px; top: 16px; z-index: 9;
+    background: #1c1c16; border: 1px solid var(--gold); color: var(--gold2);
+    border-radius: 14px; padding: 12px 14px; display: none;
+  }
+  .pin-label { font-size: 10px; fill: #f7e2a4; font-family: Outfit, sans-serif; }
+  .progress {
+    height: 6px; background: #2a2a32; border-radius: 99px; overflow: hidden; margin: 10px 0;
+  }
+  .progress span { display: block; height: 100%; width: 8%; background: linear-gradient(90deg, #e4c36a, #9be7ff); }
+  .kicker { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="app">
+    <div class="toast" id="toast"></div>
+
+    <section class="screen on" id="splash">
+      <div class="splash-body">
+        <div class="eyebrow">A2B Rides · NW Ohio</div>
+        <h1>Hop on.<br><span class="holo">Ride now</span><br>or later.</h1>
+        <p class="lede">Instant pickups and scheduled rides in Tesla fleet cars across Toledo, Perrysburg, Maumee, and the surrounding towns.</p>
+        <div class="field">
+          <label>Your name</label>
+          <input id="name" placeholder="Alex" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label>Mobile</label>
+          <input id="phone" placeholder="419-555-0148" inputmode="tel" />
+        </div>
+        <button class="btn block" id="hop">Hop on</button>
+        <p class="fine">Demo rider app. Orders save on this device. Card on file is a test Visa ···· 4242. Promo HOPGOLD takes $5 off.</p>
+      </div>
+    </section>
+
+    <section class="screen" id="home">
+      <div class="map-wrap">
+        <svg class="map" id="homeMap" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"></svg>
+        <div class="topbar">
+          <div class="pill logo">HopRide</div>
+          <div class="pill" id="cityPill">Toledo · live</div>
+        </div>
+        <div class="sheet">
+          <div class="kicker" id="hello">Ready when you are</div>
+          <button class="where" id="openBook">Where to?</button>
+          <div class="chips">
+            <button class="chip" data-quick="airport">Airport</button>
+            <button class="chip" data-quick="fifth">Fifth Third Field</button>
+            <button class="chip" data-quick="home">Home</button>
+            <button class="chip" data-quick="work">Work</button>
+          </div>
+        </div>
+        <nav class="nav">
+          <button class="on" data-tab="home">Home</button>
+          <button data-tab="trips">Trips</button>
+          <button data-tab="account">Account</button>
+        </nav>
+      </div>
+    </section>
+
+    <section class="screen" id="book">
+      <div class="pad" style="padding-bottom: 12px;">
+        <div class="subhead">
+          <button class="btn ghost slim" id="backHome">Back</button>
+          <strong class="logo">Book a hop</strong>
+          <span></span>
+        </div>
+        <input class="search" id="q" placeholder="Search NW Ohio places" />
+      </div>
+      <div class="list" id="places"></div>
+    </section>
+
+    <section class="screen" id="quote">
+      <div class="map-wrap" style="min-height: 220px; flex: none; height: 240px;">
+        <svg class="map" id="quoteMap" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"></svg>
+      </div>
+      <div class="pad">
+        <div class="kicker">Upfront fare</div>
+        <h2 id="routeTitle" style="margin: 6px 0 4px; font-family: Syne, sans-serif;">Route</h2>
+        <div class="muted" id="routeMeta"></div>
+        <div class="chips" id="whenChips">
+          <button class="chip on" data-when="instant">Instant</button>
+          <button class="chip" data-when="scheduled">Schedule</button>
+        </div>
+        <div id="schedBox" class="hide" style="margin-top: 12px;">
+          <div class="row">
+            <div class="field" style="flex:1; margin-top:0;">
+              <label>Date</label>
+              <input type="date" id="sDate" />
+            </div>
+            <div class="field" style="flex:1; margin-top:0;">
+              <label>Time</label>
+              <input type="time" id="sTime" />
+            </div>
+          </div>
+          <p class="fine">Scheduled hops lock the fare. No surge. Free cancel until 15 minutes before pickup.</p>
+        </div>
+        <div id="classes"></div>
+        <div class="field">
+          <label>Promo</label>
+          <input id="promo" placeholder="HOPGOLD" />
+        </div>
+        <div id="breakdown" style="margin-top: 10px;"></div>
+        <button class="btn block" id="confirm">Confirm hop</button>
+        <button class="btn ghost block" id="changeRoute">Change route</button>
+      </div>
+    </section>
+
+    <section class="screen" id="live">
+      <div class="map-wrap">
+        <svg class="map" id="liveMap" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"></svg>
+        <div class="topbar"><div class="pill" id="liveStatus">Matching</div><div class="pill" id="liveEta">—</div></div>
+        <div class="sheet" id="liveSheet"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="receipt">
+      <div class="pad">
+        <div class="kicker">Trip complete</div>
+        <h2 style="font-family: Syne, sans-serif; margin-bottom: 4px;">How was the hop?</h2>
+        <div id="receiptBody"></div>
+        <div class="stars" id="stars"></div>
+        <div class="field">
+          <label>Tip</label>
+          <div class="chips" id="tips">
+            <button class="chip" data-tip="0">No tip</button>
+            <button class="chip on" data-tip="3">$3</button>
+            <button class="chip" data-tip="5">$5</button>
+            <button class="chip" data-tip="8">$8</button>
+          </div>
+        </div>
+        <button class="btn block" id="finish">Done</button>
+      </div>
+    </section>
+
+    <section class="screen" id="trips">
+      <div class="pad">
+        <div class="kicker">Your hops</div>
+        <h2 style="font-family: Syne, sans-serif;">Trips</h2>
+        <div id="tripList"></div>
+      </div>
+      <nav class="nav">
+        <button data-tab="home">Home</button>
+        <button class="on" data-tab="trips">Trips</button>
+        <button data-tab="account">Account</button>
+      </nav>
+    </section>
+
+    <section class="screen" id="account">
+      <div class="pad">
+        <div class="kicker">Rider</div>
+        <h2 class="logo" id="acctName">Alex</h2>
+        <div class="account-row"><strong>Payment</strong><small>Visa ···· 4242 · demo</small></div>
+        <div class="account-row"><strong>Home</strong><small>Old West End, Toledo</small></div>
+        <div class="account-row"><strong>Work</strong><small>Downtown Toledo</small></div>
+        <div class="account-row"><strong>Service area</strong><small>Toledo, Perrysburg, Maumee, Holland, Findlay, Fremont, airport</small></div>
+        <div class="account-row"><strong>Safety</strong><small>Share-trip link copies after a driver is assigned. Emergency: 911.</small></div>
+        <button class="btn ghost block" id="exportRides">Export orders JSON</button>
+        <button class="btn danger block" id="signOut">Sign out</button>
+      </div>
+      <nav class="nav">
+        <button data-tab="home">Home</button>
+        <button data-tab="trips">Trips</button>
+        <button class="on" data-tab="account">Account</button>
+      </nav>
+    </section>
+  </div>
+</div>
+<script>
+const PLACES = [
+  {id:'loc', name:'Your location', sub:'Downtown Toledo', x:46, y:58},
+  {id:'fifth', name:'Fifth Third Field', sub:'Downtown Toledo', x:52, y:54},
+  {id:'prom', name:'Promenade Park', sub:'Riverfront', x:48, y:46},
+  {id:'docks', name:'The Docks', sub:'International Park', x:63, y:50},
+  {id:'ut', name:'University of Toledo', sub:'West Toledo', x:22, y:40},
+  {id:'mall', name:'Franklin Park Mall', sub:'West Toledo', x:28, y:64},
+  {id:'hospital', name:'ProMedica Toledo Hospital', sub:'North Toledo', x:40, y:26},
+  {id:'casino', name:'Hollywood Casino', sub:'East Toledo', x:72, y:58},
+  {id:'airport', name:'Toledo Express Airport', sub:'Swanton', x:14, y:80},
+  {id:'perry', name:'Levis Commons', sub:'Perrysburg', x:70, y:78},
+  {id:'maumee', name:'Maumee', sub:'Conant Street', x:36, y:82},
+  {id:'holland', name:'Holland', sub:'Springfield Twp', x:30, y:70},
+  {id:'findlay', name:'Downtown Findlay', sub:'Findlay', x:82, y:16},
+  {id:'fremont', name:'Downtown Fremont', sub:'Fremont', x:88, y:36},
+  {id:'home', name:'Home', sub:'Saved · Old West End', x:36, y:48},
+  {id:'work', name:'Work', sub:'Saved · Downtown', x:51, y:56}
+];
+const CLASSES = [
+  {id:'hop', name:'Hop', car:'Tesla Model 3', seats:4, base:3.5, mile:1.65, min:0.32, eta:4},
+  {id:'comfort', name:'Comfort', car:'Model 3 Long Range', seats:4, base:5.75, mile:2.05, min:0.38, eta:6},
+  {id:'xl', name:'XL', car:'Tesla Model Y', seats:6, base:7.25, mile:2.35, min:0.42, eta:8}
+];
+const DRIVERS = [
+  {name:'Maya Chen', plate:'HOP 318', rating:4.98, trips:1840},
+  {name:'Andre Walsh', plate:'A2B 204', rating:4.96, trips:2211},
+  {name:'Luis Ortega', plate:'HOP 551', rating:4.94, trips:990},
+  {name:'Jordan Blake', plate:'A2B 117', rating:4.99, trips:3104}
+];
+
+const state = {
+  user: null,
+  rides: [],
+  pickup: PLACES[0],
+  dropoff: null,
+  when: 'instant',
+  klass: 'hop',
+  promo: '',
+  tip: 3,
+  rating: 5,
+  active: null
+};
+
+function load() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('hopride') || '{}');
+    state.user = raw.user || null;
+    state.rides = raw.rides || [];
+  } catch (e) { state.rides = []; }
+}
+function save() {
+  localStorage.setItem('hopride', JSON.stringify({user: state.user, rides: state.rides}));
+}
+function money(n) { return '$' + n.toFixed(2); }
+function place(id) { return PLACES.find(p => p.id === id); }
+function milesBetween(a, b) {
+  const d = Math.hypot(a.x - b.x, a.y - b.y);
+  return Math.max(1.1, +(d * 0.46).toFixed(1));
+}
+function minutesBetween(miles) { return Math.max(6, Math.round(miles * 2.4)); }
+function surgeNow() {
+  const h = new Date().getHours();
+  if ((h >= 16 && h <= 19) || h >= 22 || h < 1) return 1.25;
+  return 1;
+}
+function quote() {
+  const c = CLASSES.find(x => x.id === state.klass);
+  const miles = milesBetween(state.pickup, state.dropoff);
+  const mins = minutesBetween(miles);
+  const surge = state.when === 'instant' ? surgeNow() : 1;
+  const sub = (c.base + miles * c.mile + mins * c.min) * surge;
+  const scheduledOff = state.when === 'scheduled' ? sub * 0.05 : 0;
+  let promoOff = 0;
+  if ((state.promo || '').trim().toUpperCase() === 'HOPGOLD') promoOff = 5;
+  const total = Math.max(4.5, sub - scheduledOff - promoOff);
+  return {c, miles, mins, surge, sub, scheduledOff, promoOff, total: +total.toFixed(2)};
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.style.display = 'none', 2400);
+}
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  if (id === 'home') drawMap('homeMap', state.pickup, null);
+  if (id === 'trips') renderTrips();
+  if (id === 'account') document.getElementById('acctName').textContent = state.user.name;
+}
+function river() {
+  return `<path d="M30 8 C40 20, 42 34, 48 46 S58 62, 54 90" fill="none" stroke="#163246" stroke-width="7" stroke-linecap="round"/>
+  <path d="M8 30 H92 M10 50 H90 M12 70 H88 M30 12 V90 M55 14 V88 M75 16 V86" stroke="#1c2430" stroke-width="0.6"/>`;
+}
+function pin(p, color) {
+  return `<g><circle cx="${p.x}" cy="${p.y}" r="2.3" fill="${color}"/><circle cx="${p.x}" cy="${p.y}" r="4.2" fill="none" stroke="${color}" stroke-width="0.4" opacity=".7"/><text class="pin-label" x="${p.x + 3}" y="${p.y - 2}">${p.name.split(' ')[0]}</text></g>`;
+}
+function drawMap(id, a, b, car) {
+  const svg = document.getElementById(id);
+  let route = '';
+  if (a && b) {
+    const mx = (a.x + b.x) / 2 + 4;
+    const my = (a.y + b.y) / 2 - 6;
+    route = `<path d="M${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}" fill="none" stroke="url(#g)" stroke-width="1.3"/>`;
+  }
+  const carDot = car ? `<circle cx="${car.x}" cy="${car.y}" r="2.1" fill="#f7e2a4"/>` : '';
+  svg.innerHTML = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4c36a"/><stop offset=".5" stop-color="#9be7ff"/><stop offset="1" stop-color="#d7a4ff"/></linearGradient></defs>${river()}${route}${a ? pin(a, '#f7e2a4') : ''}${b ? pin(b, '#9be7ff') : ''}${carDot}`;
+}
+function renderPlaces(q) {
+  const query = (q || '').toLowerCase();
+  const list = PLACES.filter(p => p.id !== 'loc' && (p.name + p.sub).toLowerCase().includes(query));
+  document.getElementById('places').innerHTML = list.map(p =>
+    `<button class="place" data-place="${p.id}"><strong>${p.name}</strong><small>${p.sub}</small></button>`
+  ).join('');
+}
+function openQuote(dropId) {
+  state.dropoff = place(dropId);
+  state.pickup = place('loc');
+  if (!state.dropoff) return;
+  const soon = new Date(Date.now() + 60 * 60 * 1000);
+  document.getElementById('sDate').value = soon.toISOString().slice(0, 10);
+  document.getElementById('sTime').value = soon.toTimeString().slice(0, 5);
+  show('quote');
+  paintQuote();
+}
+function paintQuote() {
+  const q = quote();
+  document.getElementById('routeTitle').textContent = state.pickup.name + ' → ' + state.dropoff.name;
+  document.getElementById('routeMeta').textContent = `${q.miles} mi · about ${q.mins} min · ${state.when === 'instant' ? 'leave now' : 'scheduled'}`;
+  drawMap('quoteMap', state.pickup, state.dropoff);
+  document.getElementById('classes').innerHTML = CLASSES.map(c => {
+    const on = c.id === state.klass ? ' on' : '';
+    const price = money(quoteFor(c.id).total);
+    return `<button class="class-card${on}" data-class="${c.id}"><div><strong>${c.name}</strong><small class="muted">${c.car} · ${c.seats} seats · ${c.eta} min</small></div><div class="price">${price}</div></button>`;
+  }).join('');
+  const promoLine = q.promoOff ? `<div class="split"><span>HOPGOLD</span><span>−${money(q.promoOff)}</span></div>` : '';
+  const sch = q.scheduledOff ? `<div class="split"><span>Schedule save</span><span>−${money(q.scheduledOff)}</span></div>` : '';
+  const surge = q.surge > 1 ? `<div class="split"><span>Evening surge</span><span>${q.surge.toFixed(2)}×</span></div>` : '';
+  document.getElementById('breakdown').innerHTML = `
+    <div class="split"><span>Base + distance + time</span><span>${money(q.sub)}</span></div>
+    ${surge}${sch}${promoLine}
+    <div class="split"><strong>You pay</strong><strong class="gold">${money(q.total)}</strong></div>`;
+}
+function quoteFor(id) {
+  const prev = state.klass;
+  state.klass = id;
+  const q = quote();
+  state.klass = prev;
+  return q;
+}
+function scheduledStamp() {
+  const d = document.getElementById('sDate').value;
+  const t = document.getElementById('sTime').value;
+  if (!d || !t) return null;
+  return new Date(`${d}T${t}`);
+}
+function confirmRide() {
+  if (!state.dropoff) return;
+  let whenAt = null;
+  if (state.when === 'scheduled') {
+    whenAt = scheduledStamp();
+    if (!whenAt || Number.isNaN(whenAt.getTime())) return toast('Pick a date and time');
+    if (whenAt.getTime() < Date.now() + 20 * 60 * 1000) return toast('Schedule at least 20 minutes ahead');
+  }
+  const q = quote();
+  const ride = {
+    id: 'HR' + Math.floor(100000 + Math.random() * 899999),
+    pickup: state.pickup,
+    dropoff: state.dropoff,
+    when: state.when,
+    whenAt: whenAt ? whenAt.toISOString() : new Date().toISOString(),
+    klass: q.c,
+    miles: q.miles,
+    mins: q.mins,
+    fare: q.total,
+    surge: q.surge,
+    promo: q.promoOff ? 'HOPGOLD' : '',
+    status: state.when === 'scheduled' ? 'scheduled' : 'searching',
+    created: new Date().toISOString(),
+    driver: null,
+    rating: null,
+    tip: 0
+  };
+  state.rides.unshift(ride);
+  save();
+  if (ride.status === 'scheduled') {
+    toast('Scheduled hop locked · ' + ride.id);
+    show('trips');
+    return;
+  }
+  state.active = ride;
+  beginLive(ride);
+}
+function beginLive(ride) {
+  show('live');
+  drawMap('liveMap', ride.pickup, ride.dropoff, {x: ride.pickup.x - 8, y: ride.pickup.y + 6});
+  document.getElementById('liveStatus').textContent = 'Finding a Hop';
+  document.getElementById('liveEta').textContent = 'matching';
+  document.getElementById('liveSheet').innerHTML = `<div class="kicker">Order ${ride.id}</div><h3 style="margin:6px 0">Matching a nearby Tesla</h3><div class="progress"><span id="bar"></span></div><p class="muted">${ride.pickup.name} → ${ride.dropoff.name}</p><button class="btn danger block" id="cancelLive">Cancel</button>`;
+  setTimeout(() => assignDriver(ride), 1600);
+}
+function assignDriver(ride) {
+  if (!state.active || state.active.id !== ride.id) return;
+  const driver = DRIVERS[Math.floor(Math.random() * DRIVERS.length)];
+  ride.driver = driver;
+  ride.status = 'arriving';
+  save();
+  const eta = ride.klass.eta;
+  document.getElementById('liveStatus').textContent = 'Driver en route';
+  document.getElementById('liveEta').textContent = eta + ' min';
+  drawMap('liveMap', ride.pickup, ride.dropoff, {x: ride.pickup.x - 6, y: ride.pickup.y + 4});
+  document.getElementById('liveSheet').innerHTML = `
+    <div class="kicker">Hop assigned</div>
+    <div class="driver"><div class="avatar">${driver.name[0]}</div><div><strong>${driver.name}</strong><small class="muted">${ride.klass.car} · ${driver.plate}<br>${driver.rating} ★ · ${driver.trips} trips</small></div></div>
+    <p>${eta} min to ${ride.pickup.name}. Fare locked at <strong class="gold">${money(ride.fare)}</strong>.</p>
+    <div class="row">
+      <button class="btn slim" id="share">Share trip</button>
+      <button class="btn slim" id="arrived">Driver arrived</button>
+    </div>
+    <button class="btn danger block" id="cancelLive">Cancel</button>`;
+}
+function arrived() {
+  const ride = state.active;
+  if (!ride) return;
+  ride.status = 'arrived';
+  save();
+  document.getElementById('liveStatus').textContent = 'Driver arrived';
+  document.getElementById('liveEta').textContent = 'here';
+  drawMap('liveMap', ride.pickup, ride.dropoff, ride.pickup);
+  document.getElementById('liveSheet').innerHTML = `
+    <div class="kicker">${ride.driver.name} is outside</div>
+    <p>${ride.klass.car} · ${ride.driver.plate}</p>
+    <button class="btn block" id="startTrip">Start trip</button>
+    <button class="btn ghost block" id="cancelLive">Cancel before pickup</button>`;
+}
+function startTrip() {
+  const ride = state.active;
+  ride.status = 'ontrip';
+  save();
+  document.getElementById('liveStatus').textContent = 'On trip';
+  document.getElementById('liveEta').textContent = ride.mins + ' min';
+  let step = 0;
+  const ticks = 8;
+  const timer = setInterval(() => {
+    step++;
+    const t = step / ticks;
+    const x = ride.pickup.x + (ride.dropoff.x - ride.pickup.x) * t;
+    const y = ride.pickup.y + (ride.dropoff.y - ride.pickup.y) * t;
+    drawMap('liveMap', ride.pickup, ride.dropoff, {x, y});
+    document.getElementById('liveEta').textContent = Math.max(1, Math.round(ride.mins * (1 - t))) + ' min';
+    if (step >= ticks) clearInterval(timer);
+  }, 700);
+  document.getElementById('liveSheet').innerHTML = `
+    <div class="kicker">Heading to ${ride.dropoff.name}</div>
+    <div class="progress"><span id="bar" style="width:20%"></span></div>
+    <p class="muted">${ride.miles} mi · ${ride.klass.name} · ${money(ride.fare)}</p>
+    <button class="btn block" id="complete">Complete dropoff</button>`;
+  setTimeout(() => { const bar = document.getElementById('bar'); if (bar) bar.style.width = '100%'; }, 5200);
+}
+function completeTrip() {
+  const ride = state.active;
+  ride.status = 'completed';
+  ride.completed = new Date().toISOString();
+  save();
+  state.rating = 5;
+  state.tip = 3;
+  document.getElementById('receiptBody').innerHTML = `
+    <div class="banner"><strong>${ride.pickup.name} → ${ride.dropoff.name}</strong><br><span class="muted">${ride.id} · ${ride.driver.name} · ${ride.klass.car}</span></div>
+    <div class="split"><span>Fare</span><span>${money(ride.fare)}</span></div>
+    <div class="split"><span>Paid with</span><span>Visa ···· 4242</span></div>`;
+  document.getElementById('stars').innerHTML = [1,2,3,4,5].map(n => `<button class="star on" data-star="${n}">★</button>`).join('');
+  document.querySelectorAll('#tips .chip').forEach(c => c.classList.toggle('on', c.dataset.tip === '3'));
+  show('receipt');
+}
+function finish() {
+  const ride = state.active;
+  if (ride) {
+    ride.rating = state.rating;
+    ride.tip = state.tip;
+    ride.status = 'completed';
+    save();
+  }
+  state.active = null;
+  toast('Thanks for hopping');
+  show('home');
+  document.getElementById('hello').textContent = 'Hey ' + state.user.name.split(' ')[0];
+}
+function cancelLive() {
+  const ride = state.active;
+  if (!ride) return show('home');
+  ride.status = 'canceled';
+  save();
+  state.active = null;
+  toast('Hop canceled');
+  show('home');
+}
+function renderTrips() {
+  const upcoming = state.rides.filter(r => r.status === 'scheduled');
+  const past = state.rides.filter(r => r.status !== 'scheduled');
+  const card = r => {
+    const when = r.when === 'scheduled' ? new Date(r.whenAt).toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : 'Instant';
+    const actions = r.status === 'scheduled'
+      ? `<div class="row" style="margin-top:8px"><button class="btn slim" data-start="${r.id}">Start window</button><button class="btn ghost slim" data-cancel="${r.id}">Cancel</button></div>`
+      : '';
+    return `<div class="ride-card"><strong>${r.pickup.name} → ${r.dropoff.name}</strong><small>${when} · ${r.klass.name} · ${money(r.fare)} · ${r.status} · ${r.id}</small>${actions}</div>`;
+  };
+  document.getElementById('tripList').innerHTML =
+    `<h3>Upcoming</h3>${upcoming.length ? upcoming.map(card).join('') : '<p class="muted">No scheduled hops yet.</p>'}
+     <h3>History</h3>${past.length ? past.map(card).join('') : '<p class="muted">Your completed hops will land here.</p>'}`;
+}
+function boot() {
+  load();
+  if (state.user) {
+    show('home');
+    document.getElementById('hello').textContent = 'Hey ' + state.user.name.split(' ')[0];
+  }
+  drawMap('homeMap', PLACES[0], null);
+}
+document.getElementById('hop').onclick = () => {
+  const name = document.getElementById('name').value.trim() || 'Alex';
+  const phone = document.getElementById('phone').value.trim() || '419-555-0148';
+  state.user = {name, phone};
+  save();
+  document.getElementById('hello').textContent = 'Hey ' + name.split(' ')[0];
+  show('home');
+};
+document.getElementById('openBook').onclick = () => { show('book'); renderPlaces(''); document.getElementById('q').focus(); };
+document.getElementById('backHome').onclick = () => show('home');
+document.getElementById('q').oninput = e => renderPlaces(e.target.value);
+document.getElementById('places').onclick = e => {
+  const btn = e.target.closest('[data-place]');
+  if (btn) openQuote(btn.dataset.place);
+};
+document.querySelectorAll('[data-quick]').forEach(b => b.onclick = () => openQuote(b.dataset.quick));
+document.getElementById('whenChips').onclick = e => {
+  const b = e.target.closest('[data-when]');
+  if (!b) return;
+  state.when = b.dataset.when;
+  document.querySelectorAll('#whenChips .chip').forEach(c => c.classList.toggle('on', c === b));
+  document.getElementById('schedBox').classList.toggle('hide', state.when !== 'scheduled');
+  paintQuote();
+};
+document.getElementById('classes').onclick = e => {
+  const b = e.target.closest('[data-class]');
+  if (!b) return;
+  state.klass = b.dataset.class;
+  paintQuote();
+};
+document.getElementById('promo').oninput = e => { state.promo = e.target.value; paintQuote(); };
+document.getElementById('sDate').onchange = paintQuote;
+document.getElementById('sTime').onchange = paintQuote;
+document.getElementById('confirm').onclick = confirmRide;
+document.getElementById('changeRoute').onclick = () => show('book');
+document.getElementById('live').onclick = e => {
+  if (e.target.id === 'cancelLive') cancelLive();
+  if (e.target.id === 'arrived') arrived();
+  if (e.target.id === 'startTrip') startTrip();
+  if (e.target.id === 'complete') completeTrip();
+  if (e.target.id === 'share') {
+    const ride = state.active;
+    const text = `HopRide trip ${ride.id} with ${ride.driver.name} (${ride.driver.plate}) to ${ride.dropoff.name}`;
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('Trip link copied'));
+    else toast(text);
+  }
+};
+document.getElementById('stars').onclick = e => {
+  const n = +e.target.dataset.star;
+  if (!n) return;
+  state.rating = n;
+  document.querySelectorAll('.star').forEach(s => s.classList.toggle('on', +s.dataset.star <= n));
+};
+document.getElementById('tips').onclick = e => {
+  const b = e.target.closest('[data-tip]');
+  if (!b) return;
+  state.tip = +b.dataset.tip;
+  document.querySelectorAll('#tips .chip').forEach(c => c.classList.toggle('on', c === b));
+};
+document.getElementById('finish').onclick = finish;
+document.querySelectorAll('.nav').forEach(nav => nav.onclick = e => {
+  const b = e.target.closest('[data-tab]');
+  if (!b) return;
+  show(b.dataset.tab);
+});
+document.getElementById('tripList').onclick = e => {
+  const start = e.target.closest('[data-start]');
+  const cancel = e.target.closest('[data-cancel]');
+  if (start) {
+    const ride = state.rides.find(r => r.id === start.dataset.start);
+    ride.status = 'searching';
+    ride.when = 'instant';
+    state.active = ride;
+    save();
+    beginLive(ride);
+  }
+  if (cancel) {
+    const ride = state.rides.find(r => r.id === cancel.dataset.cancel);
+    ride.status = 'canceled';
+    save();
+    toast('Scheduled hop canceled');
+    renderTrips();
+  }
+};
+document.getElementById('signOut').onclick = () => { state.user = null; save(); show('splash'); };
+document.getElementById('exportRides').onclick = () => {
+  const blob = new Blob([JSON.stringify(state.rides, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hopride-orders.json';
+  a.click();
+};
+boot();
+</script>
+</body>
+</html>
